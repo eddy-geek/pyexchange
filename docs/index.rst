@@ -258,6 +258,14 @@ You can pickle events if you need to serialize them. (We do this to send invites
     print rehydrated_event.subject # "80s Movie Night"
 
 
+To disable SSL certificate validation (e.g. when using corporate intranet) use this class (as per `requests doc <http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification>`_): ::
+
+    class UnverifiedConnection(ExchangeNTLMAuthConnection):
+        def build_session(self):
+            super().build_session()
+            self.session.verify = False
+
+
 Changelog
 ---------
 
