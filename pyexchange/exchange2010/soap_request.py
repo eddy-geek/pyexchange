@@ -7,6 +7,10 @@ Unless required by applicable law or agreed to in writing, software?distributed 
 from lxml.builder import ElementMaker
 from ..utils import convert_datetime_to_utc
 
+import sys
+if sys.version_info[0] == 3:
+	unicode = str
+
 MSG_NS = u'http://schemas.microsoft.com/exchange/services/2006/messages'
 TYPE_NS = u'http://schemas.microsoft.com/exchange/services/2006/types'
 SOAP_NS = u'http://schemas.xmlsoap.org/soap/envelope/'
