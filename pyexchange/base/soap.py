@@ -12,6 +12,7 @@ from datetime import datetime
 from pytz import utc
 
 from ..exceptions import FailedExchangeException
+from pyexchange.exchange2010 import soap_request
 
 SOAP_NS = u'http://schemas.xmlsoap.org/soap/envelope/'
 
@@ -25,8 +26,9 @@ class ExchangeServiceSOAP(object):
 
   EXCHANGE_DATE_FORMAT = u"%Y-%m-%dT%H:%M:%SZ"
 
-  def __init__(self, connection):
+  def __init__(self, connection, version=u'Exchange2010'):
     self.connection = connection
+    self.version = version 
 
   def send(self, xml, headers=None, retries=4, timeout=30, encoding="utf-8"):
     request_xml = self._wrap_soap_xml_request(xml)
@@ -66,7 +68,9 @@ class ExchangeServiceSOAP(object):
     return response
 
   def _wrap_soap_xml_request(self, exchange_xml):
-    root = S.Envelope(S.Body(exchange_xml))
+    root = S.Envelope(
+      S.Header(soap_request.exchange_header(version=self.version)),
+      S.Body(exchange_xml))
     return root
 
   def _parse_date(self, date_string):
