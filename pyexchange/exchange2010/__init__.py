@@ -7,16 +7,21 @@ Unless required by applicable law or agreed to in writing, software?distributed 
 
 import logging
 from ..base.calendar import BaseExchangeCalendarEvent, BaseExchangeCalendarService, ExchangeEventOrganizer, ExchangeEventResponse
+from ..base.mail import BaseExchangeMailService
 from ..base.folder import BaseExchangeFolder, BaseExchangeFolderService
-from ..base.soap import ExchangeServiceSOAP
+from ..base.soap import ExchangeServiceSOAP, S
 from ..exceptions import FailedExchangeException, ExchangeStaleChangeKeyException, ExchangeItemNotFoundException, ExchangeInternalServerTransientErrorException, ExchangeIrresolvableConflictException, InvalidEventType
 
-from . import soap_request
+from . import soap_request, soap_request_mail
 
 from lxml import etree
 from copy import deepcopy
 from datetime import date
 import warnings
+
+import sys
+if sys.version_info[0] == 3:
+  basestring = str
 
 log = logging.getLogger("pyexchange")
 
@@ -27,7 +32,7 @@ class Exchange2010Service(ExchangeServiceSOAP):
     return Exchange2010CalendarService(service=self, calendar_id=id)
 
   def mail(self):
-    raise NotImplementedError("Sorry - nothin' here. Feel like adding it? :)")
+    return Exchange2010MailService(service=self)
 
   def contacts(self):
     raise NotImplementedError("Sorry - nothin' here. Feel like adding it? :)")
@@ -77,6 +82,20 @@ class Exchange2010Service(ExchangeServiceSOAP):
         pass
       elif code.text != u"NoError":
         raise FailedExchangeException(u"Exchange Fault (%s) from Exchange server" % code.text)
+
+
+class Exchange2013Service(Exchange2010Service):
+  """
+  Allows using Exchange 2013-specific features by setting the right header
+  """
+  def _wrap_soap_xml_request(self, exchange_xml):
+    """ <soap:Header>
+          <t:RequestServerVersion Version="Exchange2013" />
+        </soap:Header> """
+    root = S.Envelope(
+      S.Header(soap_request.exchange_header(version=u'Exchange2013')),
+      S.Body(exchange_xml))
+    return root
 
 
 class Exchange2010CalendarService(BaseExchangeCalendarService):
@@ -700,6 +719,34 @@ class Exchange2010CalendarEvent(BaseExchangeCalendarEvent):
   def _parse_event_conflicts(self, response):
     conflicting_ids = response.xpath(u'//m:Items/t:CalendarItem/t:ConflictingMeetings/t:CalendarItem/t:ItemId', namespaces=soap_request.NAMESPACES)
     return [id_element.get(u"Id") for id_element in conflicting_ids]
+
+
+class Exchange2010MailService(BaseExchangeMailService):
+  """
+  Creates & Stores a list of Exchange2010CalendarEvent items in the "self.events" variable.
+  """
+  def list_mails(self, service=None, query=None):
+    mails = list()
+    mail_ids = list()
+
+    # This request uses a Calendar-specific query between two dates.
+    body = soap_request_mail.get_mail_items(format=u'AllProperties', query=query)
+    response_xml = self.service.send(body)
+    self._parse_response_for_all_mails(response_xml)
+
+    # Populate the event ID list, for convenience reasons.
+    for mail in mails:
+      mail_ids.append(mail._id)
+    return
+
+  def _parse_response_for_all_mails(self, response):
+    # TODO FIXME finish (this is still copy-paste)
+    """
+    This function will retrieve *most* of the event data, excluding Organizer & Attendee details
+    """
+    raise NotImplementedError("Sorry - nothin' here. Feel like adding it? :)")
+
+  
 
 
 class Exchange2010FolderService(BaseExchangeFolderService):

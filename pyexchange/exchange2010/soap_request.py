@@ -9,7 +9,8 @@ from ..utils import convert_datetime_to_utc
 
 import sys
 if sys.version_info[0] == 3:
-	unicode = str
+  unicode = str
+  basestring = str
 
 MSG_NS = u'http://schemas.microsoft.com/exchange/services/2006/messages'
 TYPE_NS = u'http://schemas.microsoft.com/exchange/services/2006/types'
@@ -23,6 +24,7 @@ T = ElementMaker(namespace=TYPE_NS, nsmap=NAMESPACES)
 EXCHANGE_DATETIME_FORMAT = u"%Y-%m-%dT%H:%M:%SZ"
 EXCHANGE_DATE_FORMAT = u"%Y-%m-%d"
 
+# http://msdn.microsoft.com/en-us/library/microsoft.exchange.webservices.data.wellknownfoldername%28v=exchg.80%29.aspx
 DISTINGUISHED_IDS = (
   'calendar', 'contacts', 'deleteditems', 'drafts', 'inbox', 'journal', 'notes', 'outbox', 'sentitems',
   'tasks', 'msgfolderroot', 'root', 'junkemail', 'searchfolders', 'voicemail', 'recoverableitemsroot',
@@ -32,9 +34,9 @@ DISTINGUISHED_IDS = (
 )
 
 
-def exchange_header():
+def exchange_header(version=u'Exchange2010'):
 
-  return T.RequestServerVersion({u'Version': u'Exchange2010'})
+  return T.RequestServerVersion({u'Version': version})
 
 
 def resource_node(element, resources):
@@ -120,6 +122,9 @@ def get_item(exchange_id, format=u"Default"):
   return root
 
 def get_calendar_items(format=u"Default", start=None, end=None, max_entries=999999):
+  """
+    http://msdn.microsoft.com/en-us/library/office/dn535506%28v=exchg.150%29.aspx#bk_getews
+  """
   start = start.strftime(EXCHANGE_DATETIME_FORMAT)
   end = end.strftime(EXCHANGE_DATETIME_FORMAT)
 
