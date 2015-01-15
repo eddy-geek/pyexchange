@@ -6,11 +6,7 @@ Unless required by applicable law or agreed to in writing, software?distributed 
 """
 from lxml.builder import ElementMaker
 from ..utils import convert_datetime_to_utc
-
-import sys
-if sys.version_info[0] == 3:
-  unicode = str
-  basestring = str
+from ..compat import _unicode
 
 MSG_NS = u'http://schemas.microsoft.com/exchange/services/2006/messages'
 TYPE_NS = u'http://schemas.microsoft.com/exchange/services/2006/types'
@@ -134,7 +130,7 @@ def get_calendar_items(format=u"Default", start=None, end=None, max_entries=9999
       T.BaseShape(format)
     ),
     M.CalendarView({
-      u'MaxEntriesReturned': unicode(max_entries),
+      u'MaxEntriesReturned': _unicode(max_entries),
       u'StartDate': start,
       u'EndDate': end,
     }),
