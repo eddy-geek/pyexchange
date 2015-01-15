@@ -79,6 +79,15 @@ class BaseExchangeFolder(object):
     if value in self.FOLDER_TYPES:
       self._folder_type = value
 
+  @property
+  def display_name(self):
+    """ **Read-only.** The internal id Exchange uses to refer to the parent folder. """
+    return self._display_name
+
+  @display_name.setter
+  def display_name(self, value):
+    self._display_name = value
+  
   def _update_properties(self, properties):
     self._track_dirty_attributes = False
     for key in properties:
@@ -102,3 +111,6 @@ class BaseExchangeFolder(object):
 
     if not self.parent_id:
       raise ValueError("Folder has no parent_id")
+
+  def __str__(self):
+    return "%s %s %s %s" % (self.__class__, self.display_name, self.folder_type, self.id)
